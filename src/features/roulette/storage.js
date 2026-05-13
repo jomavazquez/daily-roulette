@@ -1,17 +1,17 @@
 const KEY = 'team-roulette-teams';
 
 const DEFAULT_TEAMS = [
-  { id: 'team-1', name: 'My Team', names: ['Sofía', 'Lucas', 'Maya', 'Diego', 'Elena', 'Marco', 'Nora', 'Theo'] },
+  { id: 'team-1', name: 'Squad A', names: ['Alex', 'David', 'Antonio', 'Sönke', 'Róbert', 'Mahbubur', 'Fabian', 'Selo', 'Mahfud', 'Vitali', 'Viktor', 'Tariq'] },
 ];
 
-export function loadTeams() {
-  try {
+export const loadTeams = () => {
+  try{
     const raw = localStorage.getItem(KEY);
-    if (!raw) return DEFAULT_TEAMS;
+    if( !raw ) return DEFAULT_TEAMS;
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_TEAMS;
+    if( !Array.isArray(parsed) || parsed.length === 0 ) return DEFAULT_TEAMS;
     return parsed;
-  } catch {
+  }catch{
     return DEFAULT_TEAMS;
   }
 }
