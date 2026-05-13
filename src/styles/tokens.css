@@ -1,0 +1,21 @@
+:root {
+  --bg:    #FFF6E6;
+  --card:  #FFFFFF;
+  --ink:   #1A1626;
+  --ink-2: #3A2F4D;
+  --muted: #6B5E7A;
+  --line:  rgba(26, 22, 38, 0.10);
+
+  --pop-1: #FF5C8A;
+  --pop-2: #FFB02E;
+  --pop-3: #FFE066;
+  --pop-4: #4FD18B;
+  --pop-5: #4DA6FF;
+  --pop-6: #7C5BFF;
+  --pop-7: #FF7A45;
+  --pop-8: #2BC4C4;
+
+  --shadow-lg: 0 30px 60px -20px rgba(26,22,38,0.25), 0 8px 20px -8px rgba(26,22,38,0.18);
+  --shadow-md: 0 10px 24px -8px rgba(26,22,38,0.18);
+  --shadow-sm: 0 2px 6px rgba(26,22,38,0.08);
+}
