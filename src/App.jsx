@@ -1,32 +1,65 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Wheel from './features/roulette/Wheel.jsx';
 import SpinButton from './features/roulette/SpinButton.jsx';
 import WinnerModal from './features/roulette/WinnerModal.jsx';
 import NamesCard from './features/roulette/NamesCard.jsx';
 import HistoryCard from './features/roulette/HistoryCard.jsx';
+import TeamsPanel from './features/roulette/TeamsPanel.jsx';
 import { PALETTE } from './features/roulette/palette.js';
 import { tick, fanfare, resumeAudio } from './features/roulette/audio.js';
 import { fireConfetti } from './features/roulette/confetti.js';
+import { loadTeams, saveTeams, newTeamId } from './features/roulette/storage.js';
 
-const DEFAULT_NAMES = ['Viktor', 'Mahbubur', 'Selo', 'Sönke', 'Antonio', 'Mahfud', 'Fabian', 'Róbert', 'Tariq', 'Vitali', 'David', 'Alex'];
+function getTeam(teams, id) {
+  return teams.find((t) => t.id === id) ?? teams[0];
+}
 
-export default App = () => {
-  const [ allNames] = useState(DEFAULT_NAMES);
-  const [ pool, setPool ] = useState(DEFAULT_NAMES);
-  const [ history, setHistory ] = useState([]);
-  const [ rotation, setRotation ] = useState(0);
-  const [ spinning, setSpinning ] = useState(false);
-  const [ winner, setWinner ] = useState(null);
-  const [ adding, setAdding ]= useState(false);
-  const [ newName, setNewName ] = useState('');
+export default function App() {
+  const [teams, setTeams]       = useState(() => loadTeams());
+  const [activeId, setActiveId] = useState(() => loadTeams()[0].id);
+  const activeTeam = getTeam(teams, activeId);
 
-  const tickTimerRef  = useRef(null);
-  const rotationRef   = useRef(0); // keep latest rotation in sync for spin math
+  useEffect(() => { saveTeams(teams); }, [teams]);
+
+  const updateActiveNames = (updater) => {
+    setTeams((ts) =>
+      ts.map((t) =>
+        t.id === activeId
+          ? { ...t, names: typeof updater === 'function' ? updater(t.names) : updater }
+          : t
+      )
+    );
+  };
+
+  const [pool, setPool]         = useState(activeTeam.names);
+  const [history, setHistory]   = useState([]);
+  const [rotation, setRotation] = useState(0);
+  const [spinning, setSpinning] = useState(false);
+  const [winner, setWinner]     = useState(null);
+  const [adding, setAdding]     = useState(false);
+  const [newName, setNewName]   = useState('');
+
+  const tickTimerRef = useRef(null);
+  const rotationRef  = useRef(0);
+
+  useEffect(() => {
+    setPool(activeTeam.names);
+    setHistory([]);
+    setWinner(null);
+    setRotation(0);
+    rotationRef.current = 0;
+  }, [activeId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    setPool((prev) => {
+      const added = activeTeam.names.filter((n) => !prev.includes(n));
+      return added.length ? [...prev, ...added] : prev;
+    });
+  }, [activeTeam.names]);
 
   const stopTicks = () => {
     if (tickTimerRef.current) { clearTimeout(tickTimerRef.current); tickTimerRef.current = null; }
   };
-
   const startTicks = () => {
     stopTicks();
     let elapsed = 0;
@@ -45,22 +78,18 @@ export default App = () => {
   const spin = useCallback((onPool) => {
     const list = onPool || pool;
     if (list.length === 0 || spinning) return;
-
     resumeAudio();
-
     const currentRot = rotationRef.current;
     const step = 360 / list.length;
     const idx = Math.floor(Math.random() * list.length);
     const targetWithin = (360 - (idx * step + step / 2)) % 360;
     const extra = 360 * (6 + Math.floor(Math.random() * 3));
     const newRot = currentRot + extra + ((targetWithin - (currentRot % 360)) + 360) % 360;
-
     rotationRef.current = newRot;
     setSpinning(true);
     setWinner(null);
     setRotation(newRot);
     startTicks();
-
     setTimeout(() => {
       stopTicks();
       setSpinning(false);
@@ -78,15 +107,13 @@ export default App = () => {
     setWinner(null);
     setTimeout(() => spin(next), 320);
   };
-
   const onKeep = () => {
     if (!winner) return;
     setHistory((h) => [{ name: winner.name, kind: 'chosen' }, ...h]);
     setWinner(null);
   };
-
   const onReset = () => {
-    setPool(allNames);
+    setPool(activeTeam.names);
     setHistory([]);
     setWinner(null);
     setRotation(0);
@@ -97,8 +124,33 @@ export default App = () => {
     const n = newName.trim();
     setAdding(false);
     setNewName('');
-    if (!n || pool.includes(n)) return;
-    setPool((p) => [...p, n]);
+    if (!n || activeTeam.names.includes(n)) return;
+    updateActiveNames((names) => [...names, n]);
+  };
+
+  const onRemoveName = (name) => {
+    updateActiveNames((names) => names.filter((n) => n !== name));
+    setPool((p) => p.filter((n) => n !== name));
+  };
+
+  const onAddTeam = (name) => {
+    const t = { id: newTeamId(), name, names: [] };
+    setTeams((ts) => [...ts, t]);
+    setActiveId(t.id);
+  };
+  const onRenameTeam = (id, name) => {
+    setTeams((ts) => ts.map((t) => (t.id === id ? { ...t, name } : t)));
+  };
+  const onDeleteTeam = (id) => {
+    setTeams((ts) => {
+      const next = ts.filter((t) => t.id !== id);
+      if (activeId === id) setActiveId(next[0].id);
+      return next;
+    });
+  };
+  const onImportTeams = (imported) => {
+    setTeams(imported);
+    setActiveId(imported[0].id);
   };
 
   return (
@@ -110,9 +162,8 @@ export default App = () => {
       gap: 40,
       alignItems: 'start',
     }}>
-      {/* ── Left column ── */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Header />
+        <Header teamName={activeTeam.name} />
 
         <div style={{
           marginTop: 12, padding: '10px 18px', borderRadius: 999,
@@ -125,13 +176,10 @@ export default App = () => {
         <div style={{ marginTop: 24 }}>
           <Wheel names={pool} rotation={rotation} spinning={spinning} size={540} />
         </div>
-        <SpinButton
-          spinning={ spinning }
-          disabled={ pool.length === 0 || spinning }
-          onClick={ () => spin() }
-        />
-        {
-          pool.length === 0 && (
+
+        <SpinButton spinning={spinning} disabled={pool.length === 0 || spinning} onClick={() => spin()} />
+
+        {pool.length === 0 && activeTeam.names.length > 0 && (
           <button onClick={onReset} style={{
             marginTop: 14, padding: '10px 20px',
             border: '1.5px solid var(--line)',
@@ -143,12 +191,21 @@ export default App = () => {
         )}
       </div>
 
-      {/* ── Right column ── */}
       <aside style={{ position: 'sticky', top: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <TeamsPanel
+          teams={teams}
+          activeId={activeId}
+          onSelect={setActiveId}
+          onAdd={onAddTeam}
+          onRename={onRenameTeam}
+          onDelete={onDeleteTeam}
+          onImport={onImportTeams}
+        />
         <NamesCard
           pool={pool}
-          allNames={allNames}
+          allNames={activeTeam.names}
           onAdd={onAdd}
+          onRemoveName={onRemoveName}
           adding={adding}
           setAdding={setAdding}
           newName={newName}
@@ -158,7 +215,6 @@ export default App = () => {
         <HistoryCard history={history} />
       </aside>
 
-      {/* ── Winner modal ── */}
       {winner && !spinning && (
         <WinnerModal
           winner={winner}
@@ -171,7 +227,7 @@ export default App = () => {
   );
 }
 
-const Header = () => {
+function Header({ teamName }) {
   return (
     <div style={{ textAlign: 'center', marginTop: 8 }}>
       <div style={{
@@ -186,7 +242,7 @@ const Header = () => {
           background: 'var(--pop-1)',
           boxShadow: '0 0 0 4px rgba(255,92,138,0.18)',
         }} />
-        Daily Roulette
+        {teamName}
       </div>
 
       <h1 style={{ marginTop: 14, fontSize: 56, lineHeight: 1.0 }}>
