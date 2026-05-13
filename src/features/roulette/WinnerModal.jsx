@@ -23,7 +23,7 @@ export default function WinnerModal({ winner, remaining, onKeep, onPass }) {
           textTransform: 'uppercase', letterSpacing: '0.14em',
           color: 'var(--muted)',
         }}>
-          🎉 The Death Wheel chose
+          🎉&nbsp; The wheel chose
         </div>
 
         <h2 style={{
@@ -41,9 +41,7 @@ export default function WinnerModal({ winner, remaining, onKeep, onPass }) {
         }} />
 
         <p style={{ color: 'var(--muted)', margin: 0, fontSize: 15 }}>
-          {
-            remaining > 0 ? "I would prefer not conducting, please spin the wheel again." : "Last one standing!"
-          }
+          {remaining > 0 ? "Their turn — or pass to spin again." : "Last one standing!"}
         </p>
 
         <div style={{ marginTop: 26, display: 'flex', gap: 12, justifyContent: 'center' }}>
@@ -91,7 +89,7 @@ export default function WinnerModal({ winner, remaining, onKeep, onPass }) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            I'll do it!
+            It's them!
           </button>
         </div>
       </div>

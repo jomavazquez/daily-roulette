@@ -1,6 +1,6 @@
 import { PALETTE } from './palette.js';
 
-export default function NamesCard({ pool, allNames, onAdd, adding, setAdding, newName, setNewName, onReset }) {
+export default function NamesCard({ pool, allNames, onAdd, onRemoveName, adding, setAdding, newName, setNewName, onReset }) {
   const removed = allNames.filter((n) => !pool.includes(n));
 
   return (
@@ -19,7 +19,11 @@ export default function NamesCard({ pool, allNames, onAdd, adding, setAdding, ne
         {pool.map((n, i) => {
           const idx = allNames.indexOf(n);
           const color = PALETTE[(idx >= 0 ? idx : i) % PALETTE.length];
-          return <Chip key={n} color={color}>{n}</Chip>;
+          return (
+            <Chip key={n} color={color} onRemove={() => onRemoveName(n)}>
+              {n}
+            </Chip>
+          );
         })}
 
         {adding ? (
@@ -59,7 +63,7 @@ export default function NamesCard({ pool, allNames, onAdd, adding, setAdding, ne
           <div style={{ height: 1, background: 'var(--line)', margin: '16px 0 12px' }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <h4 style={{ fontSize: 13, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
-              Removed
+              Removed this round
             </h4>
             <button onClick={onReset} style={{
               background: 'transparent', border: 'none',
@@ -77,7 +81,7 @@ export default function NamesCard({ pool, allNames, onAdd, adding, setAdding, ne
   );
 }
 
-function Chip({ children, color, muted }) {
+function Chip({ children, color, muted, onRemove }) {
   if (muted) {
     return (
       <span style={{
@@ -90,12 +94,29 @@ function Chip({ children, color, muted }) {
   }
   return (
     <span style={{
-      padding: '6px 12px 6px 10px', background: 'rgba(26,22,38,0.04)',
+      padding: '5px 6px 5px 10px', background: 'rgba(26,22,38,0.04)',
       color: 'var(--ink)', borderRadius: 999, fontSize: 13, fontWeight: 600,
-      display: 'inline-flex', alignItems: 'center', gap: 6,
+      display: 'inline-flex', alignItems: 'center', gap: 5,
     }}>
       <span style={{ width: 8, height: 8, borderRadius: '50%', background: color || '#888', flexShrink: 0 }} />
       {children}
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          title="Remove from team"
+          style={{
+            display: 'grid', placeItems: 'center',
+            width: 16, height: 16, borderRadius: '50%',
+            border: 'none', background: 'transparent',
+            color: 'var(--muted)', cursor: 'pointer', padding: 0,
+            lineHeight: 1, fontSize: 14,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,92,138,0.15)'; e.currentTarget.style.color = '#FF5C8A'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--muted)'; }}
+        >
+          ×
+        </button>
+      )}
     </span>
   );
 }
