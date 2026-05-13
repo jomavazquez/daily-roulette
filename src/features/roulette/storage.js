@@ -16,13 +16,15 @@ export const loadTeams = () => {
   }
 }
 
-export function saveTeams(teams) {
-  try {
+export const saveTeams = ( teams ) => {
+  try{
     localStorage.setItem(KEY, JSON.stringify(teams));
-  } catch { /* storage full or unavailable */ }
+  }catch{ 
+    /* storage full or unavailable */ 
+  }
 }
 
-export function exportTeams(teams) {
+export const exportTeams = ( teams ) => {
   const blob = new Blob([JSON.stringify(teams, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -32,20 +34,20 @@ export function exportTeams(teams) {
   URL.revokeObjectURL(url);
 }
 
-export function importTeams(file) {
+export const importTeams = ( file ) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      try {
+      try{
         const data = JSON.parse(e.target.result);
-        if (!Array.isArray(data)) throw new Error('Invalid format');
+        if( !Array.isArray(data) ) throw new Error('Invalid format');
         // validate shape
         const teams = data.filter(
           (t) => t && typeof t.id === 'string' && typeof t.name === 'string' && Array.isArray(t.names)
         );
-        if (teams.length === 0) throw new Error('No valid teams found');
+        if( teams.length === 0 ) throw new Error('No valid teams found');
         resolve(teams);
-      } catch (err) {
+      }catch( err ){
         reject(err);
       }
     };
@@ -54,6 +56,6 @@ export function importTeams(file) {
   });
 }
 
-export function newTeamId() {
+export const newTeamId = () => {
   return 'team-' + Date.now();
 }
