@@ -1,7 +1,7 @@
 const KEY = 'team-roulette-teams';
 
 const DEFAULT_TEAMS = [
-  { id: 'team-1', name: 'Squad A', names: ['Alex', 'David', 'Antonio', 'Sönke', 'Róbert', 'Mahbubur', 'Fabian', 'Selo', 'Mahfud', 'Vitali', 'Viktor', 'Tariq'] },
+  { id: 'team-1', name: 'Squad A', names: ['AlexXX', 'David', 'Antonio', 'Sönke', 'Róbert', 'Mahbubur', 'Fabian', 'Selo', 'Mahfud', 'Vitali', 'Viktor', 'Tariq'] },
 ];
 
 export const loadTeams = () => {
